@@ -65,7 +65,7 @@ class Utility:
 
         em = discord.Embed(
             description='*' + inspect.getdoc(cog) + '*',
-            color=discord.Colour.blurple()
+            color=discord.Colour.green()
         )
         em.set_author(name=cog.__class__.__name__ + ' - Help', icon_url=ctx.bot.user.avatar_url)
 
@@ -82,7 +82,7 @@ class Utility:
         """Formats command help."""
         prefix = self.bot.prefix
         em = discord.Embed(
-            color=discord.Color.blurple(),
+            color=discord.Color.green(),
             description=cmd.help
         )
 
@@ -167,11 +167,11 @@ class Utility:
     @trigger_typing
     async def about(self, ctx):
         """Shows information about the bot."""
-        em = discord.Embed(color=discord.Color.blurple(), timestamp=datetime.datetime.utcnow())
+        em = discord.Embed(color=0x36393F, timestamp=datetime.datetime.utcnow())
         em.set_author(name='CODM Support - About', icon_url=self.bot.user.avatar_url)
         em.set_thumbnail(url=self.bot.user.avatar_url)
 
-        em.description = 'This is a Discord bot made by Fire, that serves'\
+        em.description = 'This is a private Discord bot made by Fire, that serves'\
                         ' as a means for members to easily communicate with'\
                         ' server leadership in an organised manner.'
 
@@ -187,14 +187,14 @@ class Utility:
         else:
             em.add_field(name='Latency', value=f'{self.bot.latency*1000:.2f} ms')
 
-        em.add_field(name='Version', value=f'`self.bot.version}`')
+        em.add_field(name='Version', value=f'`{self.bot.version}`')
         em.add_field(name='Author', value='`Fire`')
 
         footer = f'Bot ID: {self.bot.user.id}'
 
         if meta:
             if self.bot.version != meta['latest_version']:
-                footer = f"A newer version is under beta v{meta['latest_version']}"
+                footer = f"A newer version is available v{meta['latest_version']}"
             else:
                 footer = 'You are up to date with the latest version.'
 
@@ -209,16 +209,16 @@ class Utility:
     @auth_required
     @trigger_typing
     async def owner(self, ctx):
-        """Shows you the name of the bot owner."""
+        """Shows the github user your access token is linked to."""
         if ctx.invoked_subcommand:
             return
 
         data = await self.bot.modmail_api.get_user_info()
 
         em = discord.Embed(
-            title='Owner',
-            description='CODM Support Owner: `Fire`',
-            color=discord.Color.blurple()
+            title='DaveBot Owmer',
+            description='**DaveBot** Owner: `Fire`',
+            color=discord.Color.green()
         )
         await ctx.send(embed=em)
 
@@ -227,13 +227,13 @@ class Utility:
     @auth_required
     @trigger_typing
     async def update(self, ctx):
-        """Updates the bot, If new version launched."""
+        """Updates the bot, this only works with heroku users."""
         metadata = await self.bot.modmail_api.get_metadata()
 
         em = discord.Embed(
             title='Already up to date',
             description=f'The latest version is `{self.bot.version}`',
-            color=discord.Color.blurple()
+            color=discord.Color.green()
         )
 
         if metadata['latest_version'] == self.bot.version:
@@ -247,7 +247,7 @@ class Utility:
             user = data['user']
             em.title = None
             em.set_author(name=user['username'], icon_url=user['avatar_url'], url=user['url'])
-            em.set_footer(text=f"Updating modmail v{self.bot.version} -> v{metadata['latest_version']}")
+            em.set_footer(text=f"Updating the bot v{self.bot.version} -> v{metadata['latest_version']}")
 
             if commit_data:
                 em.set_author(name=user['username'] + ' - Updating bot', icon_url=user['avatar_url'], url=user['url'])
@@ -282,7 +282,7 @@ class Utility:
             await self.bot.config.update()
             em = discord.Embed(
                 title='Activity Removed',
-                color=discord.Color.blurple()
+                color=discord.Color.green()
             )
             return await ctx.send(embed=em)
 
@@ -304,7 +304,7 @@ class Utility:
         em = discord.Embed(
             title='Activity Changed',
             description=f'Current activity is: {activity_type.name} {message}.',
-            color=discord.Color.blurple()
+            color=discord.Color.green()
         )
         return await ctx.send(embed=em)
 
@@ -326,7 +326,7 @@ class Utility:
         current = self.bot.config.get('mention', '@here')
         em = discord.Embed(
             title='Current text',
-            color=discord.Color.blurple(),
+            color=discord.Color.green(),
             description=f'{current}'
         )
 
@@ -347,7 +347,7 @@ class Utility:
         current = self.bot.prefix
         em = discord.Embed(
             title='Current prefix',
-            color=discord.Color.blurple(),
+            color=discord.Color.green(),
             description=f'{current}'
         )
 
@@ -372,7 +372,7 @@ class Utility:
     async def options(self, ctx):
         """Return a list of valid config keys you can change."""
         valid = ', '.join(f'`{k}`' for k in self.bot.config.allowed_to_change_in_command)
-        em = discord.Embed(title='Valid Keys', description=valid, color=discord.Color.blurple())
+        em = discord.Embed(title='Valid Keys', description=valid, color=discord.Color.green())
         await ctx.send(embed=em)
 
     @config.command(name='set')
@@ -383,13 +383,13 @@ class Utility:
 
         em = discord.Embed(
             title='Success',
-            color=discord.Color.blurple(),
+            color=discord.Color.green(),
             description=f'Set `{key}` to `{value}`'
         )
 
         if key not in self.bot.config.allowed_to_change_in_command:
             em.title = 'Error'
-            em.color = discord.Color.blurple()
+            em.color = discord.Color.green()
             em.description = f'{key} is an invalid key.'
             valid_keys = [f'`{k}`' for k in self.bot.config.allowed_to_change_in_command]
             em.add_field(name='Valid keys', value=', '.join(valid_keys))
@@ -400,16 +400,16 @@ class Utility:
 
     @config.command(name='del')
     async def _del(self, ctx, key: str.lower):
-        """Deletes a key from the config."""
+        """Sets a specified key from the config to nothing."""
         em = discord.Embed(
             title='Success',
-            color=discord.Color.blurple(),
-            description=f'`{key}` had been deleted from the config.'
+            color=discord.Color.green(),
+            description=f'Set `{key}` to nothing.'
         )
 
         if key not in self.bot.config.allowed_to_change_in_command:
             em.title = 'Error'
-            em.color = discord.Color.blurple()
+            em.color = discord.Color.green()
             em.description = f'{key} is an invalid key.'
             valid_keys = [f'`{k}`' for k in self.bot.config.allowed_to_change_in_command]
             em.add_field(name='Valid keys', value=', '.join(valid_keys))
@@ -422,12 +422,12 @@ class Utility:
     @config.command(name='get')
     async def get(self, ctx, key=None):
         """Shows the config variables that are currently set."""
-        em = discord.Embed(color=discord.Color.blurple())
+        em = discord.Embed(color=discord.Color.green())
         em.set_author(name='Current config', icon_url=self.bot.user.avatar_url)
 
         if key and key not in self.bot.config.allowed_to_change_in_command:
             em.title = 'Error'
-            em.color = discord.Color.blurple()
+            em.color = discord.Color.green()
             em.description = f'`{key}` is an invalid key.'
             valid_keys = [f'`{k}`' for k in self.bot.config.allowed_to_change_in_command]
             em.add_field(name='Valid keys', value=', '.join(valid_keys))
@@ -456,7 +456,7 @@ class Utility:
 
         embeds = []
 
-        em = discord.Embed(color=discord.Color.blurple())
+        em = discord.Embed(color=discord.Color.green())
         em.set_author(name='Command aliases', icon_url=ctx.guild.icon_url)
 
         embeds.append(em)
@@ -470,7 +470,7 @@ class Utility:
 
         for name, value in self.bot.aliases.items():
             if len(em.fields) == 5:
-                em = discord.Embed(color=discord.Color.blurple(), description=em.description)
+                em = discord.Embed(color=discord.Color.green(), description=em.description)
                 em.set_author(name='Command aliases', icon_url=ctx.guild.icon_url)
                 em.set_footer(text=f'Do {self.bot.prefix}help aliases for more commands.')
                 embeds.append(em)
@@ -496,7 +496,7 @@ class Utility:
 
         em = discord.Embed(
             title='Added alias',
-            color=discord.Color.blurple(),
+            color=discord.Color.green(),
             description=f'`{name}` points to: {value}'
         )
 
@@ -511,7 +511,7 @@ class Utility:
 
         em = discord.Embed(
             title='Removed alias',
-            color=discord.Color.blurple(),
+            color=discord.Color.green(),
             description=f'`{name}` no longer exists.'
         )
 
