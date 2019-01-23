@@ -168,10 +168,10 @@ class Utility:
     async def about(self, ctx):
         """Shows information about the bot."""
         em = discord.Embed(color=discord.Color.blurple(), timestamp=datetime.datetime.utcnow())
-        em.set_author(name='Modmail - About', icon_url=self.bot.user.avatar_url)
+        em.set_author(name='CODM Support - About', icon_url=self.bot.user.avatar_url)
         em.set_thumbnail(url=self.bot.user.avatar_url)
 
-        em.description = 'This is an open source Discord bot that serves'\
+        em.description = 'This is a Discord bot made by Fire, that serves'\
                         ' as a means for members to easily communicate with'\
                         ' server leadership in an organised manner.'
 
@@ -187,18 +187,18 @@ class Utility:
         else:
             em.add_field(name='Latency', value=f'{self.bot.latency*1000:.2f} ms')
 
-        em.add_field(name='Version', value=f'[`{self.bot.version}`](https://modmail.tk/changelog)')
-        em.add_field(name='Author', value='[`kyb3r`](https://github.com/kyb3r)')
+        em.add_field(name='Version', value=f'`self.bot.version}`')
+        em.add_field(name='Author', value='`Fire`')
 
         footer = f'Bot ID: {self.bot.user.id}'
 
         if meta:
             if self.bot.version != meta['latest_version']:
-                footer = f"A newer version is available v{meta['latest_version']}"
+                footer = f"A newer version is under beta v{meta['latest_version']}"
             else:
                 footer = 'You are up to date with the latest version.'
 
-        em.add_field(name='Github', value='https://github.com/kyb3r/modmail', inline=False)
+        em.add_field(name='Server', value='https://discord.gg/TwbVXeP', inline=False)
 
         em.set_footer(text=footer)
 
@@ -208,21 +208,18 @@ class Utility:
     @owner_only()
     @auth_required
     @trigger_typing
-    async def github(self, ctx):
-        """Shows the github user your access token is linked to."""
+    async def owner(self, ctx):
+        """Shows you the name of the bot owner."""
         if ctx.invoked_subcommand:
             return
 
         data = await self.bot.modmail_api.get_user_info()
 
         em = discord.Embed(
-            title='Github',
-            description='Current User',
+            title='Owner,
+            description='CODM Support Owner: `Fire`',
             color=discord.Color.blurple()
         )
-        user = data['user']
-        em.set_author(name=user['username'], icon_url=user['avatar_url'], url=user['url'])
-        em.set_thumbnail(url=user['avatar_url'])
         await ctx.send(embed=em)
 
     @commands.command()
@@ -230,12 +227,12 @@ class Utility:
     @auth_required
     @trigger_typing
     async def update(self, ctx):
-        """Updates the bot, this only works with heroku users."""
+        """Updates the bot, If new version launched."""
         metadata = await self.bot.modmail_api.get_metadata()
 
         em = discord.Embed(
             title='Already up to date',
-            description=f'The latest version is [`{self.bot.version}`](https://github.com/kyb3r/modmail/blob/master/bot.py#L25)',
+            description=f'The latest version is `{self.bot.version}`',
             color=discord.Color.blurple()
         )
 
@@ -243,7 +240,6 @@ class Utility:
             data = await self.bot.modmail_api.get_user_info()
             if not data.get('error'):
                 user = data['user']
-                em.set_author(name=user['username'], icon_url=user['avatar_url'], url=user['url'])
         else:
             data = await self.bot.modmail_api.update_repository()
 
