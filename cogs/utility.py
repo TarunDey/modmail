@@ -216,7 +216,7 @@ class Utility:
         data = await self.bot.modmail_api.get_user_info()
 
         em = discord.Embed(
-            title='Owner,
+            title='Owner',
             description='CODM Support Owner: `Fire`',
             color=discord.Color.blurple()
         )
