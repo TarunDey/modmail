@@ -14,7 +14,7 @@ from core.time import UserFriendlyTime, human_timedelta
 
 
 class Thread:
-    """Commands directly related to CODM SUpport functionality."""
+    """Commands directly related to CODM Support functionality."""
 
     def __init__(self, bot):
         self.bot = bot
