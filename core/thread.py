@@ -99,7 +99,7 @@ class Thread:
             }
         })
 
-        if log_data is not None and isinstance(log_data, dict):
+        if not isinstance(log_data, str) or log_data is not None:
             if self.bot.selfhosted:
                 log_url = f"{self.bot.config.log_url.strip('/')}/logs/{log_data['key']}"
             else:
@@ -119,25 +119,21 @@ class Thread:
 
         em = discord.Embed(description=desc, color=discord.Color.red())
 
-        event = 'Thread Closed as Scheduled' if scheduled else 'Thread Closed'
+        event = 'Thread Closed as Scheduled' if scheduled else 'Thread Closed!'
         # em.set_author(name=f'Event: {event}', url=log_url)
         em.set_footer(text=f'{event} by {closer} ({closer.id})')
         em.timestamp = datetime.datetime.utcnow()
 
         tasks = [
+            self.bot.log_channel.send(embed=em),
             self.bot.config.update()
         ]
 
-        if self.bot.log_channel:
-            tasks.append(self.bot.log_channel.send(embed=em))
-
         # Thread closed message 
 
-        em = discord.Embed(title='Thread Closed', color=discord.Color.red())
+        em = discord.Embed(title='Thread Closed!', color=discord.Color.red())
         em.description = message or \
             f'{closer.mention} has closed this Modmail thread.'
-        em.set_footer(text='Replying will create a new thread', icon_url=self.bot.guild.icon_url)
-        em.timestamp = datetime.datetime.utcnow()
 
         if not silent and self.recipient is not None:
             tasks.append(self.recipient.send(embed=em))
@@ -164,6 +160,9 @@ class Thread:
             embed = msg.embeds[0]
             if embed and embed.author and embed.author.url:
                 if str(message_id) == str(embed.author.url).split('/')[-1]:
+                    if ' - (Edited)' not in embed.footer.text:
+                        embed.set_footer(
+                            text=embed.footer.text + ' - (Edited)')
                     embed.description = message
                     await msg.edit(embed=embed)
                     break
@@ -237,22 +236,14 @@ class Thread:
 
         em = discord.Embed(
             description=message.content,
-            timestamp=message.created_at
         )
 
         system_avatar_url = 'https://discordapp.com/assets/f78426a064bc9dd24847519259bc42af.png'
 
         # store message id in hidden url
-        if not note:
-            em.set_author(name=author,
-                      icon_url=author.avatar_url,
+        em.set_author(name=str(author) if not note else 'Note',
+                      icon_url=author.avatar_url if not note else system_avatar_url,
                       url=message.jump_url)
-        else:
-            em.set_author(
-                name=f'Note ({author.name})',
-                icon_url=system_avatar_url,
-                url=message.jump_url
-            )
 
         image_types = ['.png', '.jpg', '.gif', '.jpeg', '.webp']
 
@@ -300,13 +291,12 @@ class Thread:
             file_upload_count += 1
 
         if from_mod:
-            em.color = self.bot.mod_color
-            em.set_footer(text=self.bot.config.get('mod_tag', 'Moderator'))
+            em.color = discord.Color.green()
         elif note:
             em.color = discord.Color.blurple()
+            em.set_footer(text=f'System ({author.name})')
         else:
-            em.set_footer(text=f'Recipient')
-            em.color = self.bot.recipient_color
+            em.color = discord.Color.gold()
 
         await destination.trigger_typing()
 
@@ -422,16 +412,14 @@ class ThreadManager:
     async def create(self, recipient, *, creator=None, category=None):
         """Creates a Modmail thread"""
 
-        thread_creation_response = self.bot.config.get(
+        em = discord.Embed(
+            title='Thread created!',
+            description=self.bot.config.get(
                 'thread_creation_response',
-                'The moderation team will get back to you as soon as possible!'
-            )
-
-        em = discord.Embed(color=self.bot.mod_color)
-        em.description = thread_creation_response
-        em.set_author(name='Thread Created')
-        em.timestamp = datetime.datetime.utcnow()
-        em.set_footer(text='Your message has been sent', icon_url=self.bot.guild.icon_url)
+                'Thank you for your message! The staff team will reply to you as soon as possible!'
+            ),
+            color=discord.Color.green()
+        )
 
         if creator is None:
             self.bot.loop.create_task(recipient.send(embed=em))
@@ -539,8 +527,10 @@ class ThreadManager:
         member = self.bot.guild.get_member(user.id)
         avi = user.avatar_url
         time = datetime.datetime.utcnow()
-
+        desc = f'{creator.mention} has created a thread with {user.mention}' \
+            if creator else f'{user.mention} has started a thread'
         key = log_url.split('/')[-1]
+        desc = f'{desc} [`{key}`]({log_url})'
 
         role_names = ''
         if member:
@@ -553,42 +543,31 @@ class ThreadManager:
                 role_names = ' '.join(r.mention for r in roles
                                       if r.name != "@everyone")
 
-        em = discord.Embed(colour=dc, description=user.mention, timestamp=time)
+        em = discord.Embed(colour=dc, description=desc)
 
         def days(d):
-            if d == '0':
-                return '**today**'
-            return f'{d} day ago' if d == '1' else f'{d} days ago'
+            return ' day ago.' if d == '1' else ' days ago.'
 
         created = str((time - user.created_at).days)
-        # if not role_names:
-        #     em.add_field(name='Mention', value=user.mention)
-        # em.add_field(name='Registered', value=created + days(created))
-        em.description += f' was created {days(created)}'
-
+        # em.add_field(name='Mention', value=user.mention)
+        em.add_field(name='Registered', value=created + days(created))
         footer = 'User ID: ' + str(user.id)
         em.set_footer(text=footer)
-        em.set_author(name=str(user), icon_url=avi, url=log_url)
-        # em.set_thumbnail(url=avi)
+        em.set_author(name=str(user), icon_url=avi)
+        em.set_thumbnail(url=avi)
 
         if member:
+            if log_count:
+                em.add_field(name='Past logs', value=f'{log_count}')
             joined = str((time - member.joined_at).days)
-            # em.add_field(name='Joined', value=joined + days(joined))
-            em.description += f', joined {days(joined)}'
-
+            em.add_field(name='Joined', value=joined + days(joined))
             if member.nick:
                 em.add_field(name='Nickname', value=member.nick, inline=True)
             if role_names:
-                em.add_field(name='Roles', value=role_names, inline=True)
+                em.add_field(name='Roles', value=role_names, inline=False)
         else:
             em.set_footer(
                 text=f'{footer} | Note: this member'
                      f' is not part of this server.')
-
-        if log_count:
-            # em.add_field(name='Past logs', value=f'{log_count}')
-            em.description += f" with **{log_count}** past {'thread' if log_count == 1 else 'threads'}."
-        else:
-            em.description += '.'
 
         return em
