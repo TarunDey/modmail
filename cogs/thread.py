@@ -13,8 +13,8 @@ from core.paginator import PaginatorSession
 from core.time import UserFriendlyTime, human_timedelta
 
 
-class Modmail:
-    """Commands directly related to Modmail functionality."""
+class Thread:
+    """Commands directly related to CODM SUpport functionality."""
 
     def __init__(self, bot):
         self.bot = bot
@@ -26,7 +26,7 @@ class Modmail:
     @trigger_typing
     @commands.has_permissions(administrator=True)
     async def setup(self, ctx):
-        """Sets up a server for Modmail"""
+        """Sets up a server for the bot."""
         if self.bot.main_category:
             return await ctx.send(f'{self.bot.modmail_guild} is already set up.')
 
@@ -37,7 +37,7 @@ class Modmail:
 
         await categ.edit(position=0)
 
-        log_channel = await self.bot.modmail_guild.create_text_channel(name='bot-logs', category=categ)
+        log_channel = await self.bot.modmail_guild.create_text_channel(name='codmsupport-logs', category=categ)
         await log_channel.edit(topic='You can delete this channel if you set up your own log channel.')
         await log_channel.send('Use the `config set log_channel_id` command to set up a custom log channel.')
 
@@ -435,7 +435,7 @@ class Modmail:
             thread = await self.bot.threads.create(user, creator=ctx.author, category=category)
 
         em = discord.Embed(
-            title='Created thread',
+            title='Created thread!',
             description=f'Thread started in {thread.channel.mention} for {user.mention}',
             color=discord.Color.blurple()
         )
@@ -446,7 +446,7 @@ class Modmail:
     @trigger_typing
     @commands.has_permissions(manage_channels=True)
     async def blocked(self, ctx):
-        """Returns a list of blocked users"""
+        """Returns a list of blocked users."""
         em = discord.Embed(title='Blocked Users', color=discord.Color.blurple(), description='')
 
         users = []
@@ -540,4 +540,4 @@ class Modmail:
 
 
 def setup(bot):
-    bot.add_cog(Modmail(bot))
+    bot.add_cog(Thread(bot))
